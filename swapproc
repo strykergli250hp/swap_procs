@@ -1,0 +1,25 @@
+#!/bin/bash 
+#
+
+NUM=0
+NUM2=0
+for XYZ in `find /proc/ -maxdepth 1 -type d -regex "^/proc/[0-9]+"`
+do
+    PRC=`echo $XYZ | cut -d / -f 3`
+    EXN=`ps -p $PRC -o comm --no-headers`
+    for OUT in `grep VmSwap $XYZ/status 2>/dev/null | awk '{ print $2 }'`
+    do
+        let NUM=$NUM+$OUT
+    done
+    if (( $NUM > 0 )); then
+        echo "PRC ID $PRC swapped $NUM KB in executable named ($EXN)"
+    fi
+    let NUM2=$NUM2+$NUM
+    NUM=0
+done
+echo "Complete amount of swap memory used is $NUM2 KB"
+
+if [ "$?" != "0" ]; then
+    echo "DOH!!! Something went wrong" 1>&2
+    exit 1
+fi
